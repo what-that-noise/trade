@@ -4,7 +4,7 @@ Created on Sun Feb 12 16:16:33 2017
 
 @author: aletwhittington
 """
-
+ 
 import quandl
 import matplotlib.pyplot as plt
 
