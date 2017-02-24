@@ -7,10 +7,14 @@ Created on Sun Feb 12 14:55:49 2017
 
 import quandl
 import matplotlib.pyplot as plt
+import pandas as pd
 
 quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
+#Stocks
 fb = quandl.get("WIKI/FB")
 goog = quandl.get("WIKI/GOOG")
+chk = quandl.get("WIKI/CHK")
+vix = quandl.get("CBOE/VIX") #VIX
 
 """ Query - Monthly data, first coloumn of dataset, % change """
 data = quandl.get("WIKI/CHK.1", start_date="2008-01-01", end_date="2014-12-31", collapse="monthly", transform="rdiff")
@@ -20,11 +24,35 @@ merge_data = quandl.get(["WIKI/CHK.1", "WIKI/GOOG", "WIKI/FB.1"], start_date="20
 
 chk = merge_data[['WIKI/CHK - Open']]
 
+#Futures [codes] https://s3.amazonaws.com/quandl-static-content/Ticker+CSV%27s/Futures/continuous.csv
+vix1 = quandl.get("CHRIS/CBOE_VX1") #1[current] month  expiration contract
+vix2 = quandl.get("CHRIS/CBOE_VX2") #2 month out experation contract
+vix3 = quandl.get("CHRIS/CBOE_VX3") #3 month out experation contract
+CHRIS/ODE_C755CBOE_VX
+""" Query - Monthly data, first coloumn of dataset, % change """
+data = quandl.get("CHRIS/CBOE_VX1.1", start_date="2008-01-01", end_date="2014-12-31", collapse="monthly", transform="rdiff")
+
+""" Query - Multiple Companies, Monthly data, first coloumn of dataset, % change """
+merge_data = quandl.get(["CHRIS/CBOE_VX1.4", "CHRIS/CBOE_VX2.4", "CHRIS/CBOE_VX3.4"], start_date="2008-01-01", end_date="2017-02-16")
+#merge_data["date"] = merge_data.index.values
+
+vx_curve = merge_data.loc["2017-02-16",:]
+vx_curve.plot()
 chk.plot.hist()
 
-mult_data = quandl.get(["WIKI/CHK.1", "WIKI/IBM.1"], start_date="2008-01-01", end_date="2015-12-31", collapse="monthly", transform="rdiff")
 
-mult_data.plot.hist(alpha=0.5)
+merge_data.plot.hist(alpha=0.3)
+
+#indexes
+marine = quandl.get("NASDAQOMX/NQUSB2773") #1Price only index
+marine_tr = quandl.get("NASDAQOMX/NQUSB2773T") #Price + dividends = Total Return (TR)
+dow_ubs_comm = quandl.get("CHRIS/CME_AW") #Dow Jones COmmodity index
+sp_midcap = quandl.get("CHRIS/CME_MD") #S&P 400 mid cap index
+sp_mini = quandl.get("CHRIS/CME_ES") #E-mini S&P 500 Index
+sp_fullsize = quandl.get("CHRIS/CME_SP") #S&P full size
+sp_fin = quandl.get("CHRIS/MX_SXB") #S&P S&P/TSX Capped Financials Index 
+sp_fullsize = quandl.get("CHRIS/MX_SXA") #S&P/TSX Global Gold Index
+
 """
 QUERY PARAMETERS
 
