@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Feb 20 12:51:18 2017
+Created on Sun Feb 26 10:20:46 2017
 
 @author: aletwhittington
 """
 
+def strat_sim(lngma, shtma, atr_cond, dayspass, symbol):
+    
 import quandl
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,10 +15,7 @@ import numpy as np
 
 quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
 #Stocks
-#fb = quandl.get("WIKI/FB")
-#goog = quandl.get("WIKI/GOOG")
 chk = quandl.get("WIKI/CHK")
-#vix = quandl.get("CBOE/VIX") #VIX
 
 #create moving average
 long_ma = 300
@@ -56,21 +55,21 @@ chk2['crossover buy'] = 0
 chk2 = chk2.dropna()
 chk2.loc[(chk2['openshortma']>chk2['buy threshold']) & (chk2['openshortma'].shift(1)<=chk2['buy threshold'].shift(1)), 'crossover buy'] = 1
  # Identify Sell using Cross over criteria
-chk2['crossover sell'] = 0
-chk2.loc[(chk2['openshortma']<chk2['openlongma']) & (chk2['openshortma'].shift(1)>=chk2['openlongma'].shift(1)), 'crossover sell'] = 1
+#chk2['crossover sell'] = 0
+#chk2.loc[(chk2['openshortma']<chk2['openlongma']) & (chk2['openshortma'].shift(1)>=chk2['openlongma'].shift(1)), 'crossover sell'] = 1
 
  # Identify Sell using Days Past Buy date
 chk2['days past sell'] = 0
 chk2.loc[chk2['crossover buy'].shift(50)==1, 'days past sell'] = 1
 
 #calculate returns
-chk2['intrade ind cr sell'] = 0
-ind_Col=chk2.shape[1]-1
-buy_Col=chk2.shape[1]-4
-sell_Col=chk2.shape[1]-3
-for i in range(1, len(chk2)):
-    j=i-1
-    chk2.iloc[i,ind_Col] = abs(chk2.iloc[i,buy_Col]+chk2.iloc[i,sell_Col]-chk2.iloc[j,ind_Col])
+#chk2['intrade ind cr sell'] = 0
+#ind_Col=chk2.shape[1]-1
+#buy_Col=chk2.shape[1]-4
+#sell_Col=chk2.shape[1]-3
+#for i in range(1, len(chk2)):
+#    j=i-1
+#    chk2.iloc[i,ind_Col] = abs(chk2.iloc[i,buy_Col]+chk2.iloc[i,sell_Col]-chk2.iloc[j,ind_Col])
 
 chk2['intrade ind days'] = 0
 ind_Col=chk2.shape[1]-1
@@ -81,17 +80,17 @@ for i in range(1, len(chk2)):
     chk2.iloc[i,ind_Col] = abs(chk2.iloc[i,buy_Col]+chk2.iloc[i,sell_Col]-chk2.iloc[j,ind_Col])
 
 # Create Group number that applies to both strategies
-chk2['group xsell ref'] = 0
-chk2.loc[(chk2['intrade ind cr sell']==1) & (chk2['intrade ind cr sell'].shift(1)==0), 'group xsell ref'] = chk2['rownum']
+chk2['group daysell ref'] = 0
+chk2.loc[(chk2['intrade ind days']==1) & (chk2['intrade ind days'].shift(1)==0), 'group daysell ref'] = chk2['rownum']
 
 # Create group indicator for xsell
-chk2['group xsell'] = 0
-grp_xsellCol=chk2.shape[1]-1
-ref_Col=chk2.shape[1]-2
-ind_Col=chk2.shape[1]-4
-for i in range(1, len(chk2)):
-    j=i-1
-    chk2.iloc[i,grp_xsellCol] = (chk2.iloc[j,grp_xsellCol]+chk2.iloc[i,ref_Col])*chk2.iloc[i,ind_Col]
+#chk2['group xsell'] = 0
+#grp_xsellCol=chk2.shape[1]-1
+#ref_Col=chk2.shape[1]-2
+#ind_Col=chk2.shape[1]-4
+#for i in range(1, len(chk2)):
+#    j=i-1
+#    chk2.iloc[i,grp_xsellCol] = (chk2.iloc[j,grp_xsellCol]+chk2.iloc[i,ref_Col])*chk2.iloc[i,ind_Col]
 
 # Create group indicator for daysell
 chk2['group daysell'] = 0
@@ -105,40 +104,15 @@ for i in range(1, len(chk2)):
 # calculate daily returns and cumulate over group ids
 chk2['return'] = (chk2['Adj. Open']/chk2['Adj. Open'].shift(1))
 chk2.loc[chk2['crossover buy'] == 1, 'return'] = 1 # set start of each group to zero % return
-chk2['cumreturn xsell'] = chk2.groupby('group xsell')['return'].cumprod()
+#chk2['cumreturn xsell'] = chk2.groupby('group xsell')['return'].cumprod()
 chk2['cumreturn daysell'] = chk2.groupby('group daysell')['return'].cumprod()
 
 # Calculate downside standard deviations
 chk2['negative returns'] = chk2['return'].map(lambda x: (x-1) if x < 1 else 0)
 
 #summarize Results
-xsell = pd.concat([chk2.groupby('group xsell')['cumreturn xsell'].last(), chk2.groupby('group xsell')['intrade ind cr sell'].sum()], axis=1)
-xsell.columns = ['return','days']
-#chk2.groupby('group xsell')['intrade ind cr sell'].sum()
+#xsell = pd.concat([chk2.groupby('group xsell')['cumreturn xsell'].last(), chk2.groupby('group xsell')['intrade ind cr sell'].sum()], axis=1)
+#xsell.columns = ['return','days']
+
 daysell = pd.concat([chk2.groupby('group daysell')['cumreturn daysell'].last(), chk2.groupby('group daysell')['cumreturn daysell'].sum()], axis=1)
 daysell.columns = ['return','days']
-
-#daysell = chk2.groupby('group daysell')['cumreturn daysell'].last()
-#chk2.groupby('group daysell')['intrade ind cr sell'].sum()
-
-#chk2['return cr sell'] = chk2['return']
-#chk2.loc[(chk2['intrade ind cr sell'] == 1) & (chk2['intrade ind cr sell'].shift(1)==0),'return cr sell'] = 1
-
-
-
-# Initial Investment
-investment = 100
-
-# Calculate Average Return on strategy
-chk2['investment'] = 0
-chk2.loc[chk2['crossover buy']==1, 'investment'] = investment
-chk2['investment return']
-
-
-
-
-
-
-
-
-    
