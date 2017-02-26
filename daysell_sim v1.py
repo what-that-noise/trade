@@ -73,8 +73,8 @@ chk2.loc[chk2['crossover buy'].shift(50)==1, 'days past sell'] = 1
 
 chk2['intrade ind days'] = 0
 ind_Col=chk2.shape[1]-1
-buy_Col=chk2.shape[1]-5
-sell_Col=chk2.shape[1]-3
+buy_Col=chk2.shape[1]-3
+sell_Col=chk2.shape[1]-2
 for i in range(1, len(chk2)):
     j=i-1
     chk2.iloc[i,ind_Col] = abs(chk2.iloc[i,buy_Col]+chk2.iloc[i,sell_Col]-chk2.iloc[j,ind_Col])
@@ -95,8 +95,8 @@ chk2.loc[(chk2['intrade ind days']==1) & (chk2['intrade ind days'].shift(1)==0),
 # Create group indicator for daysell
 chk2['group daysell'] = 0
 grp_daysellCol=chk2.shape[1]-1
-ref_Col=chk2.shape[1]-3
-ind_Col=chk2.shape[1]-4
+ref_Col=chk2.shape[1]-2
+ind_Col=chk2.shape[1]-3
 for i in range(1, len(chk2)):
     j=i-1
     chk2.iloc[i,grp_daysellCol] = (chk2.iloc[j,grp_daysellCol]+chk2.iloc[i,ref_Col])*chk2.iloc[i,ind_Col]
@@ -114,5 +114,21 @@ chk2['negative returns'] = chk2['return'].map(lambda x: (x-1) if x < 1 else 0)
 #xsell = pd.concat([chk2.groupby('group xsell')['cumreturn xsell'].last(), chk2.groupby('group xsell')['intrade ind cr sell'].sum()], axis=1)
 #xsell.columns = ['return','days']
 
-daysell = pd.concat([chk2.groupby('group daysell')['cumreturn daysell'].last(), chk2.groupby('group daysell')['cumreturn daysell'].sum()], axis=1)
+daysell = pd.concat([chk2.groupby('group daysell')['cumreturn daysell'].last(), chk2.groupby('group daysell')['intrade ind days'].sum()], axis=1)
 daysell.columns = ['return','days']
+daysell['annulized return'] = (daysell['return']**(251/daysell['days'])) - 1
+
+
+#try new route
+row_buy = chk2['rownum'].where(chk2['crossover buy']==1).dropna().reset_index()
+row_buy.columns=['buy date', 'buy row']
+row_sell = chk2['rownum'].where(chk2['days past sell']==1).dropna().reset_index()
+row_sell.columns=['sell date', 'sell row']
+row_trades = pd.concat([row_buy,row_sell], axis=1)
+
+chk3 = chk2
+for buy in range(len(row_trades)):
+    #print(buy)
+    buyrow = row_trades.iloc[buy,1]
+    sellrow = row_trades.iloc[buy,3]
+    chk3.loc[(chk3['rownum'] >= buyrow) & (chk3['rownum']<=sellrow), 'group daysell'] = buyrow
