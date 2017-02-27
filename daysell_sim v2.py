@@ -15,82 +15,84 @@ import numpy as np
 
 quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
 #Stocks
-chk = quandl.get("WIKI/CHK")
+tck = quandl.get("WIKI/CHK")
 
 #create moving average
 long_ma = 300
 short_ma = 60
-chk['openlongma'] = pd.rolling_mean(chk['Adj. Open'],long_ma)
-chk['openshortma'] = pd.rolling_mean(chk['Adj. Open'],short_ma)
+tck['openlongma'] = pd.rolling_mean(tck['Adj. Open'],long_ma)
+tck['openshortma'] = pd.rolling_mean(tck['Adj. Open'],short_ma)
 
-#chk2 = chk.dropna()
+#tck2 = tck.dropna()
 
     
 #Calculate ATR
-chk['rownum'] = np.zeros(len(chk))  
-Count_Row=chk.shape[0] #gives number of row count
-rows_Col=chk.shape[1]-1
-for i in range (len(chk)): #create column of row numbers
-    chk.iloc[i,rows_Col] = int(i)
+tck['rownum'] = np.zeros(len(tck))  
+Count_Row=tck.shape[0] #gives number of row count
+rows_Col=tck.shape[1]-1
+for i in range (len(tck)): #create column of row numbers
+    tck.iloc[i,rows_Col] = int(i)
     
-chk['H-L'] = abs(chk['Adj. High']-chk['Adj. Low'])
-chk['H-PDC'] = abs(chk['Adj. High']-chk['Adj. Close'].shift(1))
-chk['PDC-L'] = abs(chk['Adj. Close'].shift(1) - chk['Adj. Low'])
-chk['TR'] = chk[['H-L','H-PDC','PDC-L']].max(axis=1)
-chk['TR ma'] = pd.rolling_mean(chk['TR'],20)
-chk.drop(['H-L','H-PDC','PDC-L'], axis=1, inplace=True) #drops columns in original dataframe
+tck['H-L'] = abs(tck['Adj. High']-tck['Adj. Low'])
+tck['H-PDC'] = abs(tck['Adj. High']-tck['Adj. Close'].shift(1))
+tck['PDC-L'] = abs(tck['Adj. Close'].shift(1) - tck['Adj. Low'])
+tck['TR'] = tck[['H-L','H-PDC','PDC-L']].max(axis=1)
+tck['TR ma'] = pd.rolling_mean(tck['TR'],20)
+tck.drop(['H-L','H-PDC','PDC-L'], axis=1, inplace=True) #drops columns in original dataframe
 
-chk2 = chk
+tck2 = tck
 
-chk2['ATR'] = np.zeros(len(chk2))
-chk2['ATR'] = np.where(chk2['rownum']==19, chk2.iloc[19,16],0)
-chk2.loc[chk2['rownum']>19, 'ATR'] = (chk2['TR']/20) + (chk2['ATR'].shift(1)*19/20)
+tck2['ATR'] = np.zeros(len(tck2))
+tck2['ATR'] = np.where(tck2['rownum']==19, tck2.iloc[19,16],0)
+tck2.loc[tck2['rownum']>19, 'ATR'] = (tck2['TR']/20) + (tck2['ATR'].shift(1)*19/20)
 
 # Identify Buy Threshold by ATR
 atr_mult = 1.5
-chk2['buy threshold'] = chk2['openlongma'] + (chk2['ATR']*1.5)
-chk2['crossover buy'] = 0
+tck2['buy threshold'] = tck2['openlongma'] + (tck2['ATR']*1.5)
+tck2['crossover buy'] = 0
 # Identify Buy
-chk2['buy'] = 0
-chk2 = chk2.dropna()
-chk2.loc[(chk2['openshortma']>chk2['buy threshold']) & (chk2['openshortma'].shift(1)<=chk2['buy threshold'].shift(1)), 'buy'] = 1
+tck2['buy'] = 0
+tck2 = tck2.dropna()
+tck2.loc[(tck2['openshortma']>tck2['buy threshold']) & (tck2['openshortma'].shift(1)<=tck2['buy threshold'].shift(1)), 'buy'] = 1
 
 # Identify Sell - using Cross over criteria
-#chk2['sell'] = 0
-#chk2.loc[(chk2['openshortma']<chk2['openlongma']) & (chk2['openshortma'].shift(1)>=chk2['openlongma'].shift(1)), 'sell'] = 1
+#tck2['sell'] = 0
+#tck2.loc[(tck2['openshortma']<tck2['openlongma']) & (tck2['openshortma'].shift(1)>=tck2['openlongma'].shift(1)), 'sell'] = 1
 
  # Identify Sell Strategy - using Days Past the Buy date
-chk2['sell'] = 0
-chk2.loc[chk2['buy'].shift(50)==1, 'sell'] = 1
+tck2['sell'] = 0
+tck2.loc[tck2['buy'].shift(50)==1, 'sell'] = 1
 
 # Set Group numbers to each trade
-row_buy = chk2['rownum'].where(chk2['buy']==1).dropna().reset_index()
+row_buy = tck2['rownum'].where(tck2['buy']==1).dropna().reset_index()
 row_buy.columns=['buy date', 'buy row']
-row_sell = chk2['rownum'].where(chk2['sell']==1).dropna().reset_index()
+row_sell = tck2['rownum'].where(tck2['sell']==1).dropna().reset_index()
 row_sell.columns=['sell date', 'sell row']
 row_trades = pd.concat([row_buy,row_sell], axis=1)
 
-chk2['trade group'] = 0
+tck2['trade group'] = 0
 for buy in range(len(row_trades)):
     buyrow = row_trades.iloc[buy,1]
     sellrow = row_trades.iloc[buy,3]
-    chk2.loc[(chk2['rownum'] >= buyrow) & (chk2['rownum']<=sellrow), 'trade group'] = buyrow
+    tck2.loc[(tck2['rownum'] >= buyrow) & (tck2['rownum']<=sellrow), 'trade group'] = buyrow
     
 
 # calculate daily returns and cumulate over group ids
-chk2['return'] = (chk2['Adj. Open']/chk2['Adj. Open'].shift(1))
-chk2.loc[chk2['buy'] == 1, 'return'] = 1 # set start of each group to zero % return
-chk2['cumreturn'] = chk2.groupby('trade group')['return'].cumprod()
+tck2['return'] = (tck2['Adj. Open']/tck2['Adj. Open'].shift(1))
+tck2.loc[tck2['buy'] == 1, 'return'] = 1 # set start of each group to zero % return
+tck2['cumreturn'] = tck2.groupby('trade group')['return'].cumprod()
 
 # Calculate downside standard deviations
-chk2['negative returns'] = chk2['return'].map(lambda x: (x-1) if x < 1 else 0)
+tck2['negative returns'] = tck2['return'].map(lambda x: (x-1)**2 if x < 1 else 0)
 
 #summarize Results
 
-return_summary = pd.concat([chk2.groupby('trade group')['cumreturn'].last(), chk2.groupby('trade group')['cumreturn'].count()], axis=1)
-return_summary.columns = ['return','days']
-return_summary['annulized return'] = (daysell['return']**(251/daysell['days'])) - 1
+return_summary = pd.concat([tck2.groupby('trade group')['cumreturn'].last(), tck2.groupby('trade group')['cumreturn'].count(), ((251/tck2.groupby('trade group')['negative returns'].count())**0.5)*((tck2.groupby('trade group')['negative returns'].sum()/tck2.groupby('trade group')['negative returns'].count())**0.5)], axis=1)
+return_summary.columns = ['return','days', 'downside dev annulzd']
+return_summary = return_summary.reset_index()
+return_summary['annualized return'] = (return_summary['return']**(251/return_summary['days'])) - 1
+return_summary['Sortino Ratio Anualzd'] = return_summary['annualized return']/return_summary['downside dev annulzd']
+return_summary_filtered = return_summary.where((return_summary['trade group']>0) & (return_summary['days']>49) & (return_summary['annualized return']<10)).dropna()
+plt.hist(return_summary['annualized return'].where(return_summary['annualized return']<10).dropna(), bins=len(return_summary['annualized return'].where(return_summary['annualized return']<10).dropna()))
 
-
-
-
+#((251/tck2.groupby('trade group')['negative returns'].count())**0.5)*((tck2.groupby('trade group')['negative returns'].sum()/tck2.groupby('trade group')['negative returns'].count())**0.5)
