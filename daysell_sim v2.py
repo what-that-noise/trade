@@ -78,15 +78,22 @@ for buy in range(len(row_trades)):
     
 
 # calculate daily returns and cumulate over group ids
-tck2['return'] = (tck2['Adj. Open']/tck2['Adj. Open'].shift(1))
+tck2['return'] = (tck2['Adj. Open']/tck2['Adj. Open'].shift(1)).fillna(1)
 tck2.loc[tck2['buy'] == 1, 'return'] = 1 # set start of each group to zero % return
 tck2['cumreturn'] = tck2.groupby('trade group')['return'].cumprod()
 
 # Calculate downside standard deviations
 tck2['negative returns'] = tck2['return'].map(lambda x: (x-1)**2 if x < 1 else 0)
 
-#summarize Results
 
+# Calculate strategy returns over time
+tck2['returns on trades'] = 1
+tck2.loc[tck2['trade group'] > 0 , 'returns on trades'] = tck2['return']
+tck2['cumreturn trades'] = tck2['returns on trades'].cumprod()
+
+#summarize Results
+investment = 1000
+tck2['equity curve'] = tck2['cumreturn trades'] * investment
 return_summary = pd.concat([tck2.groupby('trade group')['cumreturn'].last(), tck2.groupby('trade group')['cumreturn'].count(), ((251/tck2.groupby('trade group')['negative returns'].count())**0.5)*((tck2.groupby('trade group')['negative returns'].sum()/tck2.groupby('trade group')['negative returns'].count())**0.5)], axis=1)
 return_summary.columns = ['return','days', 'downside dev annulzd']
 return_summary = return_summary.reset_index()
@@ -94,5 +101,5 @@ return_summary['annualized return'] = (return_summary['return']**(251/return_sum
 return_summary['Sortino Ratio Anualzd'] = return_summary['annualized return']/return_summary['downside dev annulzd']
 return_summary_filtered = return_summary.where((return_summary['trade group']>0) & (return_summary['days']>49) & (return_summary['annualized return']<10)).dropna()
 plt.hist(return_summary['annualized return'].where(return_summary['annualized return']<10).dropna(), bins=len(return_summary['annualized return'].where(return_summary['annualized return']<10).dropna()))
-
+plt.plot(tck2['equity curve'])
 #((251/tck2.groupby('trade group')['negative returns'].count())**0.5)*((tck2.groupby('trade group')['negative returns'].sum()/tck2.groupby('trade group')['negative returns'].count())**0.5)
