@@ -103,7 +103,7 @@ tck2.drop(['cumreturn trade'], axis=1, inplace=True)
 tck2['negative returns sqrd'] = tck2['return'].map(lambda x: (x-1)**2 if x < 1 else 0)
 
 
-#summarize Results
+#summarize Results at Trade Level
 
 ## Equity Curve
 investment = 1000
@@ -120,8 +120,28 @@ plt.hist(return_summary['rate of return for trade annlzd'].where(return_summary[
 # MAR = Average returns from Trades / Max Drawdown across all trades
 # R ratio = Sum of positive returns divided by sum of negative returns
 
+#summarize Results at Strategy Level
 tck3 = tck2.reset_index()
-t = 365/((tck3['Date'].max() - tck3['Date'].min()).days)
-t_annual = 365/t
-strat_summary = pd.concat(pd.DataFrame([tck3['Date'].max(), tck3['Date'].min(), tck3['Date'].max()-tck3['Date'].min())], axis=1)
-[int(i.days) for i in (tck3['Date'].max() - tck3['Date'].min())]
+###days_of_strategy = (tck3['Date'].max() - tck3['Date'].min()).days
+start = tck3['Date'].min()
+end = tck3['Date'].max()
+converter_to_annual = 365/((tck3['Date'].max() - tck3['Date'].min()).days)
+years = ((tck3['Date'].max() - tck3['Date'].min()).days)/365
+mean_annl_rtn_pct_strat = float(100*((tck3['cumreturn strategy'].tail(1)**converter_to_annual)-1))
+## MAR = Average returns from Trades / Max Drawdown across all trades
+max_drawdown = abs(tck3['drawdown'].min())
+mar = float((mean_annl_rtn_pct_strat/100) / max_drawdown)
+## Sortino
+dwnsd = tck3.where(tck3['trade group']>0).dropna()
+downside_dev = (dwnsd['negative returns sqrd'].sum()/dwnsd['negative returns sqrd'].count())**0.5
+downside_dev_annl = (365**0.5)*downside_dev
+sortino = float((mean_annl_rtn_pct_strat/100)/downside_dev_annl)
+## Sharp
+std_dev_annl = (365**0.5)*dwnsd['return'].std()
+sharp = float((mean_annl_rtn_pct_strat/100)/std_dev_annl)
+
+#FINAL OUTPUT
+strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, max_drawdown, mar, sortino, sharp]).T
+strat_summary.columns=['start','end', 'years', 'mean annl pct return', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl']
+
+
