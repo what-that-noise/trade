@@ -161,14 +161,14 @@ output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresul
 gbl = globals()
 for i in range(260,350,10): #9 1:45min expected run time
     for j in range (30, 80, 10): #5
-        for k in range(0.5, 2.5, 0.5): #5
+        for k in range(5, 30, 5): #5
+            k2 = k/10
             for l in range(30, 70, 10): #4
 #Collect results
-                output = pd.concat([output,strat_sim(i, j, k, l)])
+                output = pd.concat([output,strat_sim(i, j, k2, l)])
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(i, j, k, l)                
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(300, 60, 1.5, 50)
 output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults.csv',header=True)
-
 
 
 
