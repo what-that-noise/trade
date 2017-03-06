@@ -142,12 +142,34 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     sharp = float((mean_annl_rtn_pct_strat/100)/std_dev_annl)
     
     #FINAL OUTPUT
-    strat_summary2 = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
-    strat_summary2.columns=['start','end', 'years', 'mean annl pct return', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
-    return strat_summary2
+    strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
+    strat_summary.columns=['start','end', 'years', 'mean annl pct return', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+    return strat_summary
 
+######Initialize table
+output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).T
+output.columns=['start','end', 'years', 'mean annl pct return', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+"""
 gbl = globals()
-for i in range(300,302,2):
-    gbl['output_'+str(i)] = strat_sim(i, 60, 1.5, 50)
+for i in range(300,320,10): 
+    #gbl['output_'+str(i)] = strat_sim(i, 60, 1.5, 50)
+    output = pd.concat([output,strat_sim(i, 60, 1.5, 50)])
+output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults.csv',header=True)
+#######
+    """
+#Run Search
+gbl = globals()
+for i in range(260,350,10): #9 1:45min expected run time
+    for j in range (30, 80, 10): #5
+        for k in range(0.5, 2.5, 0.5): #5
+            for l in range(30, 70, 10): #4
+#Collect results
+                output = pd.concat([output,strat_sim(i, j, k, l)])
+                #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(i, j, k, l)                
+                #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(300, 60, 1.5, 50)
+output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults.csv',header=True)
+
+
+
 
 
