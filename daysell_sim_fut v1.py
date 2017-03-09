@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 26 10:20:46 2017
+Created on Wed Mar  8 21:25:34 2017
 
 @author: aletwhittington
 """
-
-def strat_sim(lngma, shtma, atr_cond, dayspass):
+fut = quandl.get("CHRIS/CME_ES1")
+plt.plot(fut['Settle'])
+def strat_sim_fut(lngma, shtma, atr_cond, dayspass, q):
     print(lngma, shtma, atr_cond, dayspass)
-    
+
     import quandl
     import matplotlib.pyplot as plt
     import pandas as pd
@@ -16,13 +17,13 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     
     quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
     #Stocks
-    tck = quandl.get("WIKI/CHK")
+    tck = quandl.get(q)
     
     #create moving average
     long_ma = lngma
     short_ma = shtma
-    tck['openlongma'] = pd.rolling_mean(tck['Adj. Open'],long_ma)
-    tck['openshortma'] = pd.rolling_mean(tck['Adj. Open'],short_ma)
+    tck['openlongma'] = pd.rolling_mean(tck['Open'],long_ma)
+    tck['openshortma'] = pd.rolling_mean(tck['Open'],short_ma)
     
     #tck2 = tck.dropna()
     
@@ -34,9 +35,9 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     for i in range (len(tck)): #create column of row numbers
         tck.iloc[i,rows_Col] = int(i)
         
-    tck['H-L'] = abs(tck['Adj. High']-tck['Adj. Low'])
-    tck['H-PDC'] = abs(tck['Adj. High']-tck['Adj. Close'].shift(1))
-    tck['PDC-L'] = abs(tck['Adj. Close'].shift(1) - tck['Adj. Low'])
+    tck['H-L'] = abs(tck['High']-tck['Low'])
+    tck['H-PDC'] = abs(tck['High']-tck['Settle'].shift(1))
+    tck['PDC-L'] = abs(tck['Settle'].shift(1) - tck['Low'])
     tck['TR'] = tck[['H-L','H-PDC','PDC-L']].max(axis=1)
     tck['TR ma'] = pd.rolling_mean(tck['TR'],20)
     tck.drop(['H-L','H-PDC','PDC-L'], axis=1, inplace=True) #drops columns in original dataframe
@@ -44,7 +45,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     tck2 = tck
     
     tck2['ATR'] = np.zeros(len(tck2))
-    tck2['ATR'] = np.where(tck2['rownum']==19, tck2.iloc[19,16],0)
+    tck2['ATR'] = np.where(tck2['rownum']==19, tck2.iloc[19,tck.shape[1]-2],0)
     tck2.loc[tck2['rownum']>19, 'ATR'] = (tck2['TR']/20) + (tck2['ATR'].shift(1)*19/20)
     
     # Identify Buy Threshold by ATR
@@ -53,6 +54,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     
     # Identify Buy
     tck2['buy'] = 0
+    tck2.drop('Change', axis=1, inplace=True)
     tck2 = tck2.dropna()
     tck2.loc[(tck2['openshortma']>tck2['buy threshold']) & (tck2['openshortma'].shift(1)<=tck2['buy threshold'].shift(1)), 'buy'] = 1
     
@@ -79,7 +81,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
         
     
     # calculate daily returns and cumulate over group ids
-    tck2['return'] = (tck2['Adj. Open']/tck2['Adj. Open'].shift(1)).fillna(1)
+    tck2['return'] = (tck2['Open']/tck2['Open'].shift(1)).fillna(1)
     tck2.loc[tck2['buy'] == 1, 'return'] = 1 # set start of each group to zero % return
     tck2['cumreturn'] = tck2.groupby('trade group')['return'].cumprod()
     
@@ -111,6 +113,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     tck2['cumreturn buyhold'] = tck2['return'].cumprod()
     equity_curve = tck2['cumreturn strategy'] * investment
     #plt.plot(tck2['cumreturn strategy'])
+    #plt.plot(tck2['cumreturn buyhold'])
     
     return_summary = pd.concat([tck2.groupby('trade group')['cumreturn'].last()-1,(tck2.groupby('trade group')['cumreturn'].last()**(251/tck2.groupby('trade group')['cumreturn'].count()))-1, tck2.groupby('trade group')['cumreturn'].count(), tck2.groupby('trade group')['negative returns sqrd'].sum()/tck2.groupby('trade group')['negative returns sqrd'].count()**0.5, ((251/tck2.groupby('trade group')['negative returns sqrd'].count())**0.5)*((tck2.groupby('trade group')['negative returns sqrd'].sum()/tck2.groupby('trade group')['negative returns sqrd'].count())**0.5), tck2.groupby('trade group')['drawdown'].max()], axis=1)
     return_summary.columns = ['rate of return on trade','rate of return for trade annlzd','days of trade', 'downside dev','downside dev annlzd', 'max drawdown']
@@ -132,7 +135,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     converter_to_annual = 365/((tck3['Date'].max() - tck3['Date'].min()).days)
     years = ((tck3['Date'].max() - tck3['Date'].min()).days)/365
     mean_annl_rtn_pct_strat = float(100*((tck3['cumreturn strategy'].tail(1)**converter_to_annual)-1))
-    mean_annl_rtn_pct_buyhold = float(100*((tck3['cumreturn buyhold'].tail(1)**converter_to_annual)-1))       
+    mean_annl_rtn_pct_buyhold = float(100*((tck3['cumreturn buyhold'].tail(1)**converter_to_annual)-1))
     ## MAR = Average returns from Trades / Max Drawdown across all trades
     max_drawdown = abs(tck3['drawdown'].min())
     mar = float((mean_annl_rtn_pct_strat/100) / max_drawdown)
@@ -149,7 +152,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, mean_annl_rtn_pct_buyhold, return_trades_avg, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
     strat_summary.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
     return strat_summary
-
+output = strat_sim_fut(300, 60, 1.5, 50, "CHRIS/CME_ES1")
 ######Initialize table
 output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0]).T
 output.columns=['start','end', 'years', 'mean annl pct return', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
@@ -169,11 +172,10 @@ for i in range(260,350,10): #9 1:45min expected run time
             k2 = k/10
             for l in range(30, 70, 10): #4
 #Collect results
-                output = pd.concat([output,strat_sim(i, j, k2, l)])
+                output = pd.concat([output,strat_sim_fut(i, j, k2, l)])
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(i, j, k, l)                
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(300, 60, 1.5, 50)
-output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults.csv',header=True)
-
+output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults_fut.csv',header=True)
 
 
 
