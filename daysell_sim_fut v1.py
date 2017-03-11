@@ -149,13 +149,13 @@ def strat_sim_fut(lngma, shtma, atr_cond, dayspass, q):
     sharp = float((mean_annl_rtn_pct_strat/100)/std_dev_annl)
     
     #FINAL OUTPUT
-    strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, mean_annl_rtn_pct_buyhold, return_trades_avg, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
-    strat_summary.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+    strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, mean_annl_rtn_pct_buyhold, mean_annl_rtn_pct_strat - mean_annl_rtn_pct_buyhold, return_trades_avg, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
+    strat_summary.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'annual return strat over buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
     return strat_summary
 output = strat_sim_fut(300, 60, 1.5, 50, "CHRIS/CME_ES1")
 ######Initialize table
-output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0]).T
-output.columns=['start','end', 'years', 'mean annl pct return', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).T
+output.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'annual return strat over buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
 """
 gbl = globals()
 for i in range(300,320,10): 

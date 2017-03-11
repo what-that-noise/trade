@@ -4,18 +4,28 @@ Created on Sun Feb 26 10:20:46 2017
 
 @author: aletwhittington
 """
+quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
+q = quandl.get("WIKI/CHK")
+import quandl
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime, timedelta
+import numpy as np
+import statsmodels.formula.api as smf
+import statsmodels.api as sm
 
 def strat_sim(lngma, shtma, atr_cond, dayspass):
     print(lngma, shtma, atr_cond, dayspass)
+    lngma, shtma, atr_cond, dayspass = 120, 10, 2, 5
+    #import quandl
+    #import matplotlib.pyplot as plt
+    #import pandas as pd
+    #from datetime import datetime, timedelta
+    #import numpy as np
     
-    import quandl
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    from datetime import datetime, timedelta
-    import numpy as np
-    
-    quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
+    #quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
     #Stocks
+    quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
     tck = quandl.get("WIKI/CHK")
     
     #create moving average
@@ -116,7 +126,7 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     return_summary.columns = ['rate of return on trade','rate of return for trade annlzd','days of trade', 'downside dev','downside dev annlzd', 'max drawdown']
     return_summary = return_summary.reset_index()
     return_trades = return_summary.where(return_summary['trade group']>0).dropna()
-    return_trades_avg = 100*return_trades['rate of return for trade annlzd'].mean()
+    return_trades_avg = (return_trades['rate of return for trade annlzd'].mean())
     return_summary['Sortino Ratio Anualzd'] = return_summary['rate of return for trade annlzd']/return_summary['downside dev annlzd']
     
     return_summary_filtered = return_summary.where((return_summary['trade group']>0) & (return_summary['days of trade']>49) & (return_summary['rate of return for trade annlzd']<10)).dropna()
@@ -146,13 +156,14 @@ def strat_sim(lngma, shtma, atr_cond, dayspass):
     sharp = float((mean_annl_rtn_pct_strat/100)/std_dev_annl)
     
     #FINAL OUTPUT
-    strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, mean_annl_rtn_pct_buyhold, return_trades_avg, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
-    strat_summary.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+    strat_summary = pd.DataFrame([start, end, years, mean_annl_rtn_pct_strat, mean_annl_rtn_pct_buyhold, mean_annl_rtn_pct_strat - mean_annl_rtn_pct_buyhold, return_trades_avg, max_drawdown, mar, sortino, sharp, lngma, shtma, atr_cond, dayspass]).T
+    strat_summary.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'annual return strat over buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+   
     return strat_summary
-
+#output =  strat_sim(50, 10, 0.5, 5) 
 ######Initialize table
-output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0]).T
-output.columns=['start','end', 'years', 'mean annl pct return', 'mean annl pct return buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
+output = pd.DataFrame([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]).T
+output.columns=['start','end', 'years', 'mean annl pct return strat', 'mean annl pct return buyhold', 'annual return strat over buyhold', 'mean annl pct return trd avg', 'max drawdown', 'mar', 'Sortino Ratio annl', 'Sharp Ratio annl', 'long ma', 'short ma', 'atr thrshld', 'days in trade']
 """
 gbl = globals()
 for i in range(300,320,10): 
@@ -162,18 +173,24 @@ output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresul
 #######
     """
 #Run Search
-gbl = globals()
-for i in range(260,350,10): #9 1:45min expected run time
-    for j in range (30, 80, 10): #5
-        for k in range(5, 30, 5): #5
+for i in range(50,150,10): #9 1:45min expected run time
+    for j in range (10, 40, 10): #5
+        for k in range(5, 25, 5): #5
             k2 = k/10
-            for l in range(30, 70, 10): #4
+            for l in range(5, 35, 10): #4
 #Collect results
                 output = pd.concat([output,strat_sim(i, j, k2, l)])
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(i, j, k, l)                
                 #gbl['output_'+str(i)+str(j)+str(k)+str(l)] = strat_sim(300, 60, 1.5, 50)
-output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults.csv',header=True)
+output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/searchresults_2.csv',header=True)
 
+#return over buyhold
+results_ols = smf.ols(formula='y~x +x', data=ch).fit()
+print(results_ols.summary())
 
-
-
+#sortino
+output2 = output.reset_index()
+y_sort = output2['Sortino Ratio annl']
+X = pd.DataFrame(output2['long ma']).join(output2['short ma']).join(output2['atr thrshld']).join(output2['days in trade'])
+results_ols = sm.OLS(y_sort.astype(float),X.astype(float)).fit() 
+print(results_ols.summary())
