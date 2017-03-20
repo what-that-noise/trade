@@ -36,14 +36,17 @@ do['return pct'] = 100*(do['Adj. Close'].pct_change())
 do['returnma'] = pd.rolling_mean(do['return pct'],30)
 xom['return pct'] = 100*(xom['Adj. Close'].pct_change())
 xom['returnma'] = pd.rolling_mean(xom['return pct'],30)
-energy = pd.concat([chk['returnma'], rig['returnma'], do['returnma'], xom['returnma']], axis=1) 
-energy.columns=['chk', 'rig', 'do', 'xom']
-energy.corr(method='pearson', min_periods=1)
 
 chk['Log Price'] = np.log(chk['Adj. Close'])
 rig['Log Price'] = np.log(rig['Adj. Close'])
 do['Log Price'] = np.log(do['Adj. Close'])
 xom['Log Price'] = np.log(xom['Adj. Close'])
+
+energy = pd.concat([chk['returnma'], rig['returnma'], do['returnma'], xom['returnma']], axis=1) 
+energy.columns=['chk', 'rig', 'do', 'xom']
+energy.corr(method='pearson', min_periods=1)
+
+
 
 # plt.plot(chk['Log Price'], label='chk')# volatility is sign. higher than others. Same strategy would be ineffective
 plt.plot(rig['Log Price'], label='rig')
@@ -59,12 +62,15 @@ psx['return pct'] = 100*(psx['Adj. Close'].pct_change())
 psx['returnma'] = pd.rolling_mean(psx['return pct'],30)
 mpc['return pct'] = 100*(mpc['Adj. Close'].pct_change())
 mpc['returnma'] = pd.rolling_mean(mpc['return pct'],30)
+
+psx['Log Price'] = np.log(psx['Adj. Close'])
+mpc['Log Price'] = np.log(mpc['Adj. Close'])
+
 midstream = pd.concat([psx['returnma'], mpc['returnma']], axis=1) 
 midstream.columns=['psx', 'mpc']
 midstream.corr(method='pearson', min_periods=1)
 
-psx['Log Price'] = np.log(psx['Adj. Close'])
-mpc['Log Price'] = np.log(mpc['Adj. Close'])
+
 
 plt.plot(psx['Log Price'], label='psx') # less volatility than Marathon Petrol same strategy should be effective with less drawdown
 plt.plot(mpc['Log Price'], label='mpc')
@@ -84,14 +90,17 @@ dal['return pct'] = 100*(dal['Adj. Close'].pct_change())
 dal['returnma'] = pd.rolling_mean(dal['return pct'],30)
 alk['return pct'] = 100*(alk['Adj. Close'].pct_change())
 alk['returnma'] = pd.rolling_mean(alk['return pct'],30)
-airlines = pd.concat([aal['returnma'], luv['returnma'], dal['returnma'], alk['returnma']], axis=1) 
-airlines.columns=['aal', 'luv', 'dal', 'alk']
-airlines.corr(method='pearson', min_periods=1)
 
 aal['Log Price'] = np.log(aal['Adj. Close'])
 luv['Log Price'] = np.log(luv['Adj. Close'])
 dal['Log Price'] = np.log(dal['Adj. Close'])
 alk['Log Price'] = np.log(alk['Adj. Close'])
+
+airlines = pd.concat([aal['returnma'], luv['returnma'], dal['returnma'], alk['returnma']], axis=1) 
+airlines.columns=['aal', 'luv', 'dal', 'alk']
+airlines.corr(method='pearson', min_periods=1)
+
+
 
 plt.plot(aal['Log Price'], label='aal') #highest volatility meaning larger drawdowns - strat should still work
 plt.plot(luv['Log Price'], label='luv')
@@ -118,6 +127,7 @@ efx['returnma'] = pd.rolling_mean(efx['return pct'],30)
 mco['return pct'] = 100*(mco['Adj. Close'].pct_change())
 mco['Log Price'] = np.log(mco['Adj. Close'])
 mco['returnma'] = pd.rolling_mean(mco['return pct'],30)
+
 marketing = pd.concat([fb['returnma'], goog['returnma'], efx['returnma'], mco['returnma']], axis=1) 
 marketing.columns=['fb', 'goog', 'efx', 'mco']
 marketing.corr(method='pearson', min_periods=1)
@@ -133,7 +143,8 @@ plt.plot(goog['Adj. Close'], label='goog')
 plt.plot(efx['Adj. Close'], label='efx')
 plt.plot(mco['Adj. Close'], label='mco')
 plt.xticks(rotation='vertical')
-plt.legend()  
+plt.legend() 
+ 
 plt.plot(fb['Log Price'], label='fb')
 plt.plot(goog['Log Price'], label='goog')
 plt.plot(efx['Log Price'], label='efx')
@@ -147,7 +158,7 @@ plt.legend(loc='best')
 amzn = quandl.get("WIKI/AMZN") #amazon
 wmt = quandl.get("WIKI/WMT") #walmart
 cost = quandl.get("WIKI/COST") # Costco
-kmx = quandl.get("WIKI/KMX") # carmax
+#kmx = quandl.get("WIKI/KMX") # carmax moved to cars
 aapl = quandl.get("WIKI/AAPL") # apple
 khc = quandl.get("WIKI/KHC") # kraft
 ko = quandl.get("WIKI/KO") # cocacola
@@ -169,9 +180,6 @@ ko['return pct'] = 100*(ko['Adj. Close'].pct_change())
 ko['returnma'] = pd.rolling_mean(ko['return pct'],30)
 pg['return pct'] = 100*(pg['Adj. Close'].pct_change())
 pg['returnma'] = pd.rolling_mean(pg['return pct'],30)
-retail = pd.concat([amzn['returnma'], wmt['returnma'], cost['returnma'], kmx['returnma'],aapl['returnma'], khc['returnma'], ko['returnma'], pg['returnma']], axis=1) 
-retail.columns=['amzn', 'wmt', 'cost', 'kmx', 'aapl', 'khc', 'ko', 'pg']
-retail.corr(method='pearson', min_periods=1)
 
 amzn['Log Price'] = np.log(amzn['Adj. Close'])
 wmt['Log Price'] = np.log(wmt['Adj. Close'])
@@ -182,12 +190,18 @@ khc['Log Price'] = np.log(khc['Adj. Close'])
 ko['Log Price'] = np.log(ko['Adj. Close'])
 pg['Log Price'] = np.log(pg['Adj. Close'])
 
-plt.plot(amzn['Log Price'], label='amzn')
+retail = pd.concat([amzn['returnma'], wmt['returnma'], cost['returnma'], kmx['returnma'],aapl['returnma'], khc['returnma'], ko['returnma'], pg['returnma']], axis=1) 
+retail.columns=['amzn', 'wmt', 'cost', 'kmx', 'aapl', 'khc', 'ko', 'pg']
+retail.corr(method='pearson', min_periods=1)
+
+
+
+# plt.plot(amzn['Log Price'], label='amzn') # too disimilar
 plt.plot(wmt['Log Price'], label='wmt')
 plt.plot(cost['Log Price'], label='cost')
-plt.plot(kmx['Log Price'], label='kmx')
-plt.plot(aapl['Log Price'], label='aapl')
-plt.plot(khc['Log Price'], label='khc')
+#plt.plot(kmx['Log Price'], label='kmx') # too disimilar
+#plt.plot(aapl['Log Price'], label='aapl') # too disimilar
+#plt.plot(khc['Log Price'], label='khc') #too short time series
 plt.plot(ko['Log Price'], label='ko')
 plt.plot(pg['Log Price'], label='pg')
 plt.xticks(rotation='vertical')
@@ -197,25 +211,31 @@ plt.legend(loc='best')
 #CARS
 f = quandl.get("WIKI/F") #ford
 gm = quandl.get("WIKI/GM") #gm
-#hmc = quandl.get("WIKI/HMC") # honda
+#hmc = quandl.get("WIKI/HMC") # honda not found in quandl
 tsla = quandl.get("WIKI/TSLA") # tesla
+kmx = quandl.get("WIKI/KMX") # carmax moved to cars
 f['return pct'] = 100*(f['Adj. Close'].pct_change())
 f['returnma'] = pd.rolling_mean(f['return pct'],30)
 gm['return pct'] = 100*(gm['Adj. Close'].pct_change())
 gm['returnma'] = pd.rolling_mean(gm['return pct'],30)
 tsla['return pct'] = 100*(tsla['Adj. Close'].pct_change())
 tsla['returnma'] = pd.rolling_mean(tsla['return pct'],30)
-cars = pd.concat([f['returnma'], gm['returnma'], tsla['returnma']], axis=1) 
-cars.columns=['f', 'gm', 'tsla']
-cars.corr(method='pearson', min_periods=1)
 
 f['Log Price'] = np.log(f['Adj. Close'])
 gm['Log Price'] = np.log(gm['Adj. Close'])
 tsla['Log Price'] = np.log(tsla['Adj. Close'])
 
+cars = pd.concat([f['returnma'], gm['returnma'], tsla['returnma']], axis=1) 
+cars.columns=['f', 'gm', 'tsla']
+cars.corr(method='pearson', min_periods=1)
+
+
+
+# overall not enough data and several disimilarities between companies
 plt.plot(f['Log Price'], label='f')
 plt.plot(gm['Log Price'], label='gm')
-plt.plot(tsla['Log Price'], label='tsla')
+#plt.plot(tsla['Log Price'], label='tsla') #too disimilar
+#plt.plot(kmx['Log Price'], label='kmx') # too disimilar
 plt.xticks(rotation='vertical')
 plt.legend(loc='best') 
 
@@ -233,18 +253,21 @@ ibm['return pct'] = 100*(ibm['Adj. Close'].pct_change())
 ibm['returnma'] = pd.rolling_mean(ibm['return pct'],30)
 orcl['return pct'] = 100*(orcl['Adj. Close'].pct_change())
 orcl['returnma'] = pd.rolling_mean(orcl['return pct'],30)
-tech = pd.concat([msft['returnma'], intc['returnma'], ibm['returnma'], orcl['returnma']], axis=1) 
-tech.columns=['msft', 'intc', 'ibm', 'orcl']
-tech.corr(method='pearson', min_periods=1)
 
 msft['Log Price'] = np.log(msft['Adj. Close'])
 intc['Log Price'] = np.log(intc['Adj. Close'])
 ibm['Log Price'] = np.log(ibm['Adj. Close'])
 orcl['Log Price'] = np.log(orcl['Adj. Close'])
 
+tech = pd.concat([msft['returnma'], intc['returnma'], ibm['returnma'], orcl['returnma']], axis=1) 
+tech.columns=['msft', 'intc', 'ibm', 'orcl']
+tech.corr(method='pearson', min_periods=1)
+
+
+
 plt.plot(msft['Log Price'], label='msft')
 plt.plot(intc['Log Price'], label='intc')
-plt.plot(ibm['Log Price'], label='ibm')
+plt.plot(ibm['Log Price'], label='ibm') # slightly different pattern. similar strategy may not work
 plt.plot(orcl['Log Price'], label='orcl')
 plt.xticks(rotation='vertical')
 plt.legend(loc='best') 
@@ -257,20 +280,22 @@ vz['return pct'] = 100*(vz['Adj. Close'].pct_change())
 vz['returnma'] = pd.rolling_mean(vz['return pct'],30)
 t['return pct'] = 100*(t['Adj. Close'].pct_change())
 t['returnma'] = pd.rolling_mean(t['return pct'],30)
-
 tmus['return pct'] = 100*(tmus['Adj. Close'].pct_change())
 tmus['returnma'] = pd.rolling_mean(tmus['return pct'],30)
-commun = pd.concat([vz['returnma'], t['returnma'], tmus['returnma']], axis=1) 
-commun.columns=['vz', 't', 'tmus']
-commun.corr(method='pearson', min_periods=1)
 
 vz['Log Price'] = np.log(vz['Adj. Close'])
 t['Log Price'] = np.log(t['Adj. Close'])
 tmus['Log Price'] = np.log(tmus['Adj. Close'])
 
+commun = pd.concat([vz['returnma'], t['returnma'], tmus['returnma']], axis=1) 
+commun.columns=['vz', 't', 'tmus']
+commun.corr(method='pearson', min_periods=1)
+
+
+
 plt.plot(vz['Log Price'], label='vz')
 plt.plot(t['Log Price'], label='t')
-plt.plot(tmus['Log Price'], label='tmus')
+#plt.plot(tmus['Log Price'], label='tmus') #too disimilar. corr <.35 with other sector companies
 plt.xticks(rotation='vertical')
 plt.legend(loc='best') 
 
@@ -279,7 +304,7 @@ wfc = quandl.get("WIKI/WFC") #Wellsfargo
 cof = quandl.get("WIKI/COF") #capone
 bbt = quandl.get("WIKI/BBT") # bbt
 trv = quandl.get("WIKI/TRV") # travelers
-#lyg = quandl.get("WIKI/LYG") # Lloyds
+#lyg = quandl.get("WIKI/LYG") # Lloyds not in quandl
 axp = quandl.get("WIKI/AXP") # american express
 
 wfc['return pct'] = 100*(wfc['Adj. Close'].pct_change())
@@ -292,9 +317,6 @@ trv['return pct'] = 100*(trv['Adj. Close'].pct_change())
 trv['returnma'] = pd.rolling_mean(trv['return pct'],30)
 axp['return pct'] = 100*(axp['Adj. Close'].pct_change())
 axp['returnma'] = pd.rolling_mean(axp['return pct'],30)
-finance = pd.concat([wfc['returnma'], cof['returnma'], bbt['returnma'], trv['returnma'], axp['returnma']], axis=1) 
-finance.columns=['wfc', 'cof', 'bbt', 'trv', 'axp']
-finance.corr(method='pearson', min_periods=1)
 
 wfc['Log Price'] = np.log(wfc['Adj. Close'])
 cof['Log Price'] = np.log(cof['Adj. Close'])
@@ -302,15 +324,22 @@ bbt['Log Price'] = np.log(bbt['Adj. Close'])
 trv['Log Price'] = np.log(trv['Adj. Close'])
 axp['Log Price'] = np.log(axp['Adj. Close'])
 
-plt.plot(msft['Log Price'], label='msft')
-plt.plot(intc['Log Price'], label='intc')
-plt.plot(ibm['Log Price'], label='ibm')
-plt.plot(orcl['Log Price'], label='orcl')
+finance = pd.concat([wfc['returnma'], cof['returnma'], bbt['returnma'], trv['returnma'], axp['returnma']], axis=1) 
+finance.columns=['wfc', 'cof', 'bbt', 'trv', 'axp']
+finance.corr(method='pearson', min_periods=1)
+
+
+
+plt.plot(wfc['Log Price'], label='wfc')
+plt.plot(cof['Log Price'], label='cof')
+plt.plot(bbt['Log Price'], label='bbt')
+plt.plot(trv['Log Price'], label='trv')
+plt.plot(axp['Log Price'], label='axp')
 plt.xticks(rotation='vertical')
 plt.legend(loc='best') 
 
 #COMBINE ALL
-combined = pd.concat([energy, midstream, airlines, marketing, retail, cars, tech, commun, finance], axis=1) 
+#combined = pd.concat([energy, midstream, airlines, marketing, retail, cars, tech, commun, finance], axis=1) 
 combined = energy.join(midstream).join(airlines).join(marketing).join(retail).join(cars).join(tech).join(commun).join(finance)
 comb_corr = combined.corr(method='pearson', min_periods=1)
 

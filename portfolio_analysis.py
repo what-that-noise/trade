@@ -55,6 +55,7 @@ portfolio['weighted_return_pct']=portfolio.dot(weights)
 #Calculated Weighted Average Portfolio Return
 port_return = portfolio['weighted_return_pct'].mean()
 
+
 #Calculated Weighted Average Portfolio Variance
   #var = w1^2*var1 + w2^2*var2 + 2*w1*w2*cov1,2
 cov_matrix = portfolio.drop('weighted_return_pct', axis=1).cov(min_periods=1)
@@ -62,6 +63,14 @@ asset_var = portfolio.drop('weighted_return_pct', axis=1).var(axis=0)
 w2 = weights**2
 var_comp = (asset_var*w2).sum()
 
+
+import itertools as iter
+
+def pset(lst):
+    comb = (iter.combinations(lst, l) for l in range(len(lst) + 1))
+    return list(iter.chain.from_iterable(comb))
+pset(portfolio.drop('weighted_return_pct', axis=1))
+   
 #Graph Comparisons in Log Scale
 port_log = pd.concat([amzn['Log Price'], xom['Log Price'], aapl['Log Price'], cof['Log Price']], axis=1) 
 port_log.columns=['amzn_log', 'xom_log', 'aapl_log', 'cof_log']
