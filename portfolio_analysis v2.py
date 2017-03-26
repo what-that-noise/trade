@@ -27,7 +27,7 @@ amzn = quandl.get("WIKI/AMZN.11", start_date=start, collapse=snapshot)
 xom = quandl.get("WIKI/XOM.11", start_date=start, collapse=snapshot)
 aapl = quandl.get("WIKI/AAPL.11", start_date=start, collapse=snapshot)
 cof = quandl.get("WIKI/COF.11", start_date=start, collapse=snapshot)
-
+fb = quandl.get("WIKI/FB.11", start_date=start, collapse=snapshot)
 
 amzn['Log Price'] = np.log(amzn['Adj. Close'])
 xom['Log Price'] = np.log(xom['Adj. Close'])
@@ -38,21 +38,13 @@ amzn['return pct'] = 100*(amzn['Adj. Close'].pct_change())
 xom['return pct'] = 100*(xom['Adj. Close'].pct_change())
 aapl['return pct'] = 100*(aapl['Adj. Close'].pct_change())
 cof['return pct'] = 100*(cof['Adj. Close'].pct_change())
-
+fb['return pct'] = 100*(fb['Adj. Close'].pct_change())
 
 portfolio2 = pd.concat([amzn['return pct'], xom['return pct'], aapl['return pct'], cof['return pct']], axis=1).dropna() 
 portfolio2.columns=['amzn_return_pct', 'xom_return_pct', 'aapl_return_pct', 'cof_return_pct']
 portfolio2.corr(method='pearson', min_periods=1)
 
-#Assign Weights
-"""
-def test(weigh):
-    w = weigh
-    print(w)
-    return type(w)
-
-test([.25,.25,.25])
-"""
+#Calculate Metrics
 
 def port_weights(weight_vector):
     print(weight_vector)
@@ -72,7 +64,8 @@ def port_weights(weight_vector):
     cov_matrix = portfolio.drop('weighted_return_pct', axis=1).cov(min_periods=1)
            #port_var = weights.transpose().values @ cov_matrix.values @ weights.values
     port_std = math.sqrt(weights.transpose().values @ cov_matrix.values @ weights.values)
-    
+    port_std_df = pd.DataFrame([port_std])
+    port_std_df.columns=['std']
     #Calculate Sharpe Ratio
     sharpe_ratio = pd.DataFrame([port_return/port_std])
     sharpe_ratio.columns=['sharpe_ratio']
@@ -80,27 +73,28 @@ def port_weights(weight_vector):
     #Summarize
     weight_list = pd.DataFrame([weights.tolist()])
     weight_list.columns=[portfolio2.columns]
-    port_summary = pd.concat([sharpe_ratio, return_annualized, weight_list], axis=1)
+    port_summary = pd.concat([sharpe_ratio, return_annualized, port_std_df, weight_list], axis=1)
     stop = timeit.default_timer()
     print((stop - start))
     return port_summary
 
 #Create Simulations
-output = pd.DataFrame([0, 0, 0, 0, 0, 0]).T
+output = pd.DataFrame([]).T
 #output.columns=['sharpe_ratio', 'return_annualized', '0','1','2','3']
-for i in range(5, 85, 10): 
+for i in range(10, 65, 5): 
     i2 = i/100
-    for j in range (5, 85, 10): 
+    for j in range (10, 65, 5): 
         j2 = j/100
-        for k in range(5, 85, 10): 
+        for k in range(5, 35, 5): 
             k2 = k/100
-            for l in range(5, 85, 10): 
+            for l in range(5, 35, 5): 
                 l2 = l/100
                 weight_vector = [i2,j2,k2,l2]
+                
 #Collect results
                 output = pd.concat([output,port_weights(weight_vector)])
 #output['tck'] ='MSFT'
-output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/portfolio_weights_2009.csv',header=True)
+output.to_csv('/Users/aletwhittington/Documents/Python_Scripts/trade/portfolio_weights_2012.csv',header=True)
 
    """
 #Graph Comparisons in Log Scale
@@ -128,3 +122,13 @@ bbt = quandl.get("WIKI/BBT") # bbt
 trv = quandl.get("WIKI/TRV") # travelers
 
     """
+    w = [.45,.1,.30,.15]
+    weights = pd.Series(w, index=portfolio2.columns)
+    portfolio = portfolio2.copy()
+    portfolio['weighted_return_pct']=portfolio.dot(weights)
+
+fb_add = pd.concat([portfolio['weighted_return_pct'],fb['return pct']],axis=1).dropna()
+fb_add.corr(method='pearson', min_periods=1)
+fb_add.cov(min_periods=1)
+fb_add['return pct'].mean()*12
+fb_add['weighted_return_pct'].mean()*12

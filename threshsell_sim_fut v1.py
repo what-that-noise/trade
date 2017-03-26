@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 26 10:20:46 2017
+Created on Tue Mar 14 17:58:21 2017
 
 @author: aletwhittington
 """
+
 quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
 q = quandl.get("WIKI/CHK")
 import quandl
