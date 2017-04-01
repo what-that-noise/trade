@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import math
 import timeit
 import numpy as np
-
+#import sys
+#sys.path.insert(0, "/Users/aletwhittington/Documents/Python_Scripts/Trade")
 quandl.ApiConfig.api_key = "Vm3hGqA7K_chXo6DfTqx"
 
 class Ticker:
@@ -43,7 +44,7 @@ class Ticker:
             plt.xticks(rotation='vertical')
             plt.legend(loc='best') 
         elif trans=='percent':
-            plt.hist(self.pct_series().dropna(),bins=20, label=self.quandlcode)
+            plt.hist(self.pct_series().dropna().values, bins=15, label=self.quandlcode)
             plt.legend(loc='best')
         else:
             plt.plot(self.ticker_pull(), label=self.quandlcode)
@@ -88,23 +89,23 @@ class Portfolio_Character:
     def portfolio_std(self):
         
         return math.sqrt(pd.Series(self.weights, index=self.create_portfolio().columns).transpose().values @ self.create_portfolio().cov(min_periods=1).values @ pd.Series(self.weights, index=self.create_portfolio().columns).values)
-
+        
     def sharpe_ratio(self):
         
         return self.weighted_return()/self.portfolio_std()
         
     def portfolio_summary(self):
         
-        w_df = pd.DataFrame([self.weights.tolist()])
+        w_df = pd.DataFrame([self.weights])
         w_df.columns=[self.create_portfolio().columns]
         sr_df = pd.DataFrame(self.sharpe_ratio())
         sr_df.columns=['Sharpe_Ratio']
         war_df = pd.DataFrame(self.weighted_annual_return())
         war_df.columns=['Portfolio_Annual_Return']
-        std_df = pd.DataFrame(self.portfolio_std())
+        std_df = pd.DataFrame([self.portfolio_std()])
         std_df.columns=['Portfolio_Stdev']
         
-        return pd.concat([self.sharpe_ratio(), self.weighted_annual_return(), self.portfolio_std(), w_df], axis=1)
+        return pd.concat([sr_df, war_df, std_df, w_df], axis=1)
 
 
 ###    TEST
@@ -114,6 +115,7 @@ amzn = Ticker('WIKI/AMZN', '2015-01-01', 'monthly')
 xom = Ticker('WIKI/XOM', '2015-01-01', 'monthly')
 
 fb_tck = fb.pct_series()
+fb_tck = fb.ticker_pull()
 amzn_tck = amzn.pct_series()
 xom_tck = xom.pct_series()
 
@@ -121,7 +123,8 @@ p = Portfolio_Character([.25,.25,.50], '[fb_tck, amzn_tck, xom_tck]')
 port = p.create_portfolio()
 p.weighted_annual_return()
 
-
+            plt.hist(fb_tck.dropna().values, label='fb')
+            plt.legend(loc='best')
 ### END
 
     #Calculated Weighted Average Portfolio Return
